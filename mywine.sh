@@ -1,7 +1,5 @@
 #!/bin/bash
 
-SETUP=~/dmc4/setup_files
-
 #uncomment if you want to delete your current wine prefix as well
 #rm -rf '~/.wine';
 
@@ -20,6 +18,15 @@ fi
 
 cd wine-auto-dirs
 
+CCACHECMD=$(command -v ccache | wc -l)
+
+if [ "$CCACHECMD" != "1" ]; then
+  echo "ccache not found! Building without ccache support" | tee -a ../mywinelog.txt
+else
+  echo "Building with CCache support" | tee -a ../mywinelog.txt
+  export PATH="/usr/lib/ccache/bin/:$PATH"
+fi
+
 echo "Checking OS architecture" | tee -a ../mywinelog.txt
 
 OSARCH=$(uname -m)
@@ -30,24 +37,7 @@ if [ "$OSARCH" = "x86_64" ]; then
   echo "Building wine for 64bit!" | tee -a ../mywinelog.txt
   rm -rf wine32-build wine64-build
   mkdir wine32-build wine64-build
-else
-  echo "Building wine for 32bit only!" | tee -a ../mywinelog.txt
-  rm -rf wine32-build
-  mkdir wine32-build
-fi
-
-echo "Created build directories" | tee -a ../mywinelog.txt
-
-CCACHECMD=$(command -v ccache | wc -l)
-
-if [ "$CCACHECMD" != "1" ]; then
-  echo "ccache not found! Building without ccache support" | tee -a ../mywinelog.txt
-else
-  echo "Building with CCache support" | tee -a ../mywinelog.txt
-  export PATH="/usr/lib/ccache/bin/:$PATH"
-fi
-
-if [ "$OSARCH" = "x86_64" ]; then
+  echo "Created build directories" | tee -a ../mywinelog.txt
   cd wine64-build
   echo "Configuring Wine64 build" | tee -a ../../mywinelog.txt
   ../wine-source/configure --prefix=/usr --libdir=/usr/lib --with-x --with-gstreamer --enable-win64 &&
@@ -65,22 +55,33 @@ if [ "$OSARCH" = "x86_64" ]; then
   echo "Wine32 build counterpart finished" | tee -a ../../mywinelog.txt &&
   cd ../..
 else
-  true
+  echo "Building wine for 32bit only!" | tee -a ../mywinelog.txt
+  rm -rf wine32-build
+  mkdir wine32-build
+  echo "Created build directory" | tee -a ../mywinelog.txt
   #TODO! plain 32bit build
 fi
 
 #remember current path
 MYSCRIPTSPATH=$PWD
 
-if [ -d "$SETUP" ]; then
-  echo "Installing Devil May Cry 4 ..." | tee -a mywinelog.txt &&
+chmod +x $PWD/getdemo.sh
+./getdemo.sh
+
+if [ -f "DevilMayCry4_Benchmark.exe" ]; then
+  echo "Installing Devil May Cry 4 benchmark..." | tee -a mywinelog.txt &&
   #maybe do the silent installation with a .bat file instead so it is more Windowsy?
   #don't prompt for Gecko/.NET
+  #/S is silent /V and afterwards are the options to pass to the built-in .msi installer
   export WINEDLLOVERRIDES="mscoree,mshtml="
-  $PWD/wine-auto-dirs/wine64-build/wine msiexec /I "$SETUP/DEVIL MAY CRY 4.msi" /qn || exit
-  
+  $PWD/wine-auto-dirs/wine64-build/wine $MYSCRIPTSPATH/DevilMayCry4_Benchmark.exe /S /v/qn &&
+  echo "Finished installing Devil May Cry 4 benchmark..." | tee -a mywinelog.txt
+  #make game settings read only
+  #create game settings path
   #copy game settings
-  cp config.ini "$HOME/.wine/drive_c/users/$USER/Local Settings/Application Data/CAPCOM/DEVILMAYCRY4/config.ini"
+  chmod 444 config.ini
+  mkdir -p "$HOME/.wine/drive_c/users/$USER/Local Settings/Application Data/CAPCOM/DEVILMAYCRY4_BENCHMARK/"
+  cp config.ini "$HOME/.wine/drive_c/users/$USER/Local Settings/Application Data/CAPCOM/DEVILMAYCRY4_BENCHMARK/config.ini"
 fi
 
 #return to repo root folder
@@ -99,8 +100,8 @@ $PWD/wine-auto-dirs/wine64-build/wine $PWD/ahk/AutoHotKeyU64.exe $PWD/dmc4.ahk &
 #if the Launcher is used instead it boots fine
 #(probably because the launcher chain-loads the proper .exe from its path)
 
-cd "$HOME/.wine/drive_c/Program Files (x86)/CAPCOM/DEVILMAYCRY4"
-
-#Launch Game! Output only FPS to log file
+cd "$HOME/.wine/drive_c/Program Files (x86)/CAPCOM/DEVILMAYCRY4_BENCHMARK"
+echo "Launching Benchmark ..." | tee -a mywinelog.txt &&
+#Launch Benchmark! Output only FPS to log file
 export WINEDLLOVERRIDES="mscoree,mshtml=" 
-WINEDEBUG=-all,+fps $MYSCRIPTSPATH/wine-auto-dirs/wine64-build/wine DevilMayCry4_DX9.exe >> $MYSCRIPTSPATH/fps.log 2>&1
+WINEDEBUG=-all,+fps $MYSCRIPTSPATH/wine-auto-dirs/wine64-build/wine DevilMayCry4_Benchmark_DX9.exe >> $MYSCRIPTSPATH/fps.log 2>&1
