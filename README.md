@@ -8,13 +8,16 @@ This script will try to download and then compile the latest wine source code (a
 Also note that even if the code successfully compiles you may still be missing some runtime dependencies.
 Now, since this script was written with my Arch Linux system in mind, it is best to first install Wine from the official repositories to make sure all runtime dependencies are met and then simply do : #pacman -R wine , to remove Wine but leaving all dependencies installed. Make sure to also install wget and unzip so the script can grab and unpack the latest version of AutoHotkey.
 
-After successfully compiling the code, the script will try to automatically and silently install DevilMayCry 4(you should have the installation files in the following path: ~/dmc4/setup_files ).
+After successfully compiling the code, the script will try to automatically download and silently install DevilMayCry 4 standalone benchmark(that is if you use the standalone branch and is done at getdemo.sh shell script). 
+If you are using the master branch you should have the installation files in the following path: ~/dmc4/setup_files ).
 
 Afterwards AutoHotkey will be fetched and unpacked by launching the getahk.sh shell script.
 
 Finally we launch our DevilMayCry4 specific AutoHotkey script (dmc4.ahk) in the background with our freshly compiled Wine and launch the game outputting the fps from winedebug to a logfile (still no parsing of written fps values implemented). 
 
-Please do NOTE that this script installs and attemps to run the retail 1.0.0 SecuROM version, so the original retail disc has to be inserted in the disc tray at the very least when installation of the game finished. Otherwise the game won't boot and everything will fail afterwards.
+If you are using the standalone branch the benchmark should launch fine after installation.
+
+However if you have choosen the master branch, please do NOTE that the script installs and attemps to run the retail 1.0.0 SecuROM version, so the original retail disc has to be inserted in the disc tray at the very least when installation of the game finished. Otherwise the game won't boot and everything will fail afterwards.
 
 ##################################################################################################
 
